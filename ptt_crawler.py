@@ -1,31 +1,37 @@
 import requests
 from bs4 import BeautifulSoup
-import sqlite3
-import schedule
-import time
 import os
 from dotenv import load_dotenv
+import sqlite3
 from line_notify import send_line_notify
 import logging
 from datetime import datetime
+import psycopg2
+from urllib.parse import urlparse
 
 # 在文件開頭添加以下代碼
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 載入環境變數
+# 載入 .env 檔案
 load_dotenv()
 
-# 設定 LINE Notify
-#LINE_NOTIFY_TOKEN = os.getenv('LINE_NOTIFY_TOKEN')
+# 現在您可以使用 os.getenv 來獲取環境變數
+PTT_BOARD = os.getenv('PTT_BOARD')
+PTT_USER = os.getenv('PTT_USER')
+LINE_NOTIFY_TOKEN = os.getenv('LINE_NOTIFY_TOKEN')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-# 建立或連接 SQLite 資料庫
-db_path = os.path.join(os.getcwd(), 'ptt_articles.db')
-conn = sqlite3.connect(db_path)
+# 替換 SQLite 連接代碼
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    # 使用 PostgreSQL
+    conn = psycopg2.connect(DATABASE_URL)
+else:
+    # 使用 SQLite
+    conn = sqlite3.connect('ptt_articles.db')
 
-#conn = sqlite3.connect('ptt_articles.db')
 c = conn.cursor()
-
 
 # 建立文章資料表（如果不存在）
 c.execute('''
@@ -41,11 +47,11 @@ conn.commit()
 
 # LINE Notify 權杖，從 LINE Notify 官網取得
 #LINE_NOTIFY_TOKEN = os.getenv('LINE_NOTIFY_TOKEN')
-PTT_BOARD = os.getenv('PTT_BOARD')
+#PTT_BOARD = os.getenv('PTT_BOARD')
 #PTT_BOARD = ''
 # PTT 用戶
 
-PTT_USER = os.getenv('PTT_USER')
+#PTT_USER = os.getenv('PTT_USER')
 #PTT_USER = 'jose50203'
 # 測試用變數，之後應移除或替換為環境變數
 #LINE_NOTIFY_TOKEN = "8XV2F5mqv9Bzlm0M6jVrKXwsaKaP5SvOWI3qXRxSICQ"  # 測試用，之後應移除
@@ -130,7 +136,10 @@ def check_for_new_articles():
         logger.info("沒有發現新文章")
 
     # 將新文章插入資料庫
-    c.executemany("INSERT INTO articles (id, title, url, comment, date) VALUES (?, ?, ?, ?, ?)", new_articles)
+    if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+        c.executemany("INSERT INTO articles (id, title, url, comment, date) VALUES (%s, %s, %s, %s, %s)", new_articles)
+    else:
+        c.executemany("INSERT INTO articles (id, title, url, comment, date) VALUES (?, ?, ?, ?, ?)", new_articles)
     conn.commit()
 
 # 測試 LINE Notify
