@@ -1,4 +1,5 @@
-import sqlite3
+import psycopg2
+from urllib.parse import urlparse
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
@@ -12,7 +13,7 @@ load_dotenv()
 
 # 設置 Gemini API 金鑰
 api_key = os.getenv("GEMINI_API_KEY")
-
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 # 測試用變數，之後應移除或替換為環境變數
 #api_key = "AIzaSyBIsMnfyjGmuW0cLAW2E3CuIrBD-oCjYW8"  # 測試用，之後應移除
@@ -21,32 +22,28 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 def connect_to_db():
-    return sqlite3.connect('ptt_articles.db')
+    if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+        # 使用 PostgreSQL
+        url = urlparse(DATABASE_URL)
+        return psycopg2.connect(
+            database=url.path[1:],
+            user=url.username,
+            password=url.password,
+            host=url.hostname,
+            port=url.port
+        )
+    else:
+        # 如果沒有 PostgreSQL URL，使用 SQLite（僅用於本地測試）
+        import sqlite3
+        return sqlite3.connect('ptt_articles.db')
 
 def get_recent_articles(cursor, limit=10):
-    cursor.execute("PRAGMA table_info(articles)")
-    columns = [column[1] for column in cursor.fetchall()]
-    
-    if 'title' not in columns:
-        raise ValueError("資料表缺少必要的欄位 'title'")
-    
-    select_columns = 'title'
-    if 'comment' in columns:
-        select_columns += ', comment'
-    
-    # 假設 'id' 是自增的主鍵
-    if 'id' in columns:
-        query = f"""
-        SELECT {select_columns}
-        FROM articles
-        WHERE id <= (SELECT MAX(id) FROM articles)
-        ORDER BY id DESC
-        LIMIT ?
-        """
-    else:
-        # 如果沒有 'id'，我們就直接取最新的 10 筆
-        query = f"SELECT {select_columns} FROM articles ORDER BY ROWID DESC LIMIT ?"
-    
+    query = """
+    SELECT title, comment
+    FROM articles
+    ORDER BY date DESC
+    LIMIT %s
+    """
     cursor.execute(query, (limit,))
     return cursor.fetchall()
 

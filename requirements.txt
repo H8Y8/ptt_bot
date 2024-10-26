@@ -1,9 +1,11 @@
+psycopg2-binary
+google-generativeai
+python-dotenv
 requests
 beautifulsoup4
-python-dotenv
-psycopg2-binary
 gunicorn
-google-generativeai
+Flask==2.3.2
+Werkzeug==2.3.6
 
 
 

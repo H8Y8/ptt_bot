@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>jose50203開噴</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rubik&display=swap" />
+    <!-- 添加網頁圖標 -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='jose50203.PNG') }}">
+    <style>
+        html {
+            background-color: #18232c;
+        }
+        .box {
+            margin: 10% auto;
+            font-size: 24px;  /* 增加基本字體大小 */
+            max-width: 1000px;  /* 增加 BOX 的最大寬度 */
+            padding: 2rem;  /* 增加內邊距 */
+        }
+        .content small {
+            color: gray;
+            font-size: 18px;  /* 增加小字體的大小 */
+        }
+        #icon>img {
+            border-radius: 50%;
+            width: 96px;  /* 增加頭像大小 */
+            height: 96px;  /* 增加頭像大小 */
+            object-fit: cover;
+        }
+        .media-content {
+            padding-left: 1rem;  /* 增加內容與頭像的間距 */
+        }
+        #title {
+            font-size: 28px;  /* 增加標題字體大小 */
+        }
+        #comment {
+            font-size: 22px;  /* 增加評論字體大小 */
+            line-height: 1.5;  /* 調整行高 */
+        }
+        
+        /* 響應式設計 */
+        @media screen and (max-width: 768px) {
+            .box {
+                margin: 5% auto;
+                font-size: 18px;
+                padding: 1rem;
+            }
+            .content small {
+                font-size: 14px;
+            }
+            #icon>img {
+                width: 64px;
+                height: 64px;
+            }
+            #title {
+                font-size: 22px;
+            }
+            #comment {
+                font-size: 18px;
+            }
+            .media {
+                flex-direction: column;
+            }
+            .media-left {
+                margin-bottom: 1rem;
+            }
+            .media-content {
+                padding-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div id="comment-box" class="box" style="display: none;">
+            <article class="media">
+                <div class="media-left">
+                    <figure class="image is-96x96" id="icon">
+                        <img src="{{ url_for('static', filename='jose50203.PNG') }}" alt="Jose50203">
+                    </figure>
+                </div>
+                <div class="media-content">
+                    <div class="content">
+                        <p>
+                            <strong id="title"></strong> <small>@Jose50203</small> <small id="date"></small>
+                            <br>
+                            <span id="comment"></span>
+                        </p>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+    <script>
+        function updateComment() {
+            fetch('/get_random_comment')
+                .then(response => response.json())
+                .then(data => {
+                    const box = document.getElementById('comment-box');
+                    const title = document.getElementById('title');
+                    const comment = document.getElementById('comment');
+                    const date = document.getElementById('date');
+
+                    // 檢查數據是否存在
+                    if (data.title && data.comment && data.date) {
+                        title.textContent = data.title;
+                        comment.textContent = data.comment;
+                        date.textContent = `· ${data.date}`;
+                        box.style.display = 'block';
+                    } else {
+                        console.error('接收到的數據格式不正確:', data);
+                        title.textContent = '無法載入數據';
+                        comment.textContent = '請稍後再試';
+                        date.textContent = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('獲取數據時發生錯誤:', error);
+                    const box = document.getElementById('comment-box');
+                    const title = document.getElementById('title');
+                    const comment = document.getElementById('comment');
+                    const date = document.getElementById('date');
+
+                    title.textContent = '發生錯誤';
+                    comment.textContent = '無法載入數據，請稍後再試';
+                    date.textContent = '';
+                    box.style.display = 'block';
+                });
+        }
+
+        updateComment();
+        setInterval(updateComment, 7000);
+    </script>
+</body>
+</html>
