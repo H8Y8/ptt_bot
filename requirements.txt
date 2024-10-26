@@ -3,6 +3,7 @@ beautifulsoup4
 python-dotenv
 psycopg2-binary
 gunicorn
+google-generativeai
 
 
 
