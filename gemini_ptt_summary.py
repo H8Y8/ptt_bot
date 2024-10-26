@@ -137,7 +137,7 @@ def main():
         print(summary)
         
         # 使用 LINE Notify 發送摘要
-        #send_line_notify("\n鄭宇豪最近的推文摘要和總結：\n" + summary)
+        send_line_notify("\n鄭宇豪最近的推文摘要和總結：\n" + summary)
     except Exception as e:
         error_message = f"發生錯誤：{e}"
         print(error_message)
