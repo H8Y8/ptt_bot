@@ -16,7 +16,7 @@ api_key = os.getenv("GEMINI_API_KEY")
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 # 測試用變數，之後應移除或替換為環境變數
-#api_key = "AIzaSyBIsMnfyjGmuW0cLAW2E3CuIrBD-oCjYW8"  # 測試用，之後應移除
+#api_key =  # 測試用，之後應移除
 if not api_key:
     raise ValueError("未找到 GEMINI_API_KEY 環境變數。請確保您的 .env 文件中包含此金鑰。")
 genai.configure(api_key=api_key)
