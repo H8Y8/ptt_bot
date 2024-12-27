@@ -24,7 +24,7 @@ client = OpenAI(
 def connect_to_db():
     return sqlite3.connect('ptt_articles.db')
 
-def get_recent_articles(cursor, limit=10):
+def get_recent_articles(cursor, limit=5):
     cursor.execute("PRAGMA table_info(articles)")
     columns = [column[1] for column in cursor.fetchall()]
     
@@ -92,11 +92,24 @@ def generate_summary(article_content):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "回覆的內容不要包含markdown語法，你將扮演一個資深的ptt網路鄉民，對我等等提供給你的數篇文章中挑出最具有代表性的推文，做個摘要，重點是推文所以你的回覆也要包含以下的格式：\n標題：{{標題}}\n推文：{{推文內容}}\n(重複此結構以包含所有推文)，最後必須將所有推文做個總結大意並以滿分100分隨機為此鄉民打分數，以下是文章標題與推文：\n\n"},
+                {"role": "system", "content": (
+            "你是一位熟悉 PTT 的資深網友，專精於解析推文內容和評估網路社群互動。"
+            "我將提供數篇文章的標題與推文，請按照以下格式分析並回覆：\n\n"
+            "1. 從每篇文章的推文中挑選出最具代表性的內容（最多3至5則推文）。\n"
+            "2. 以清晰的格式呈現，包含以下欄位：\n"
+            "- 標題：{{文章標題}}\n"
+            "- 推文：{{推文1內容}}\n"
+            "- 推文：{{推文2內容}}\n"
+            "(重複此結構，直到列出所有挑選的推文)\n"
+            "3. 最後，總結所有推文的討論大意，並根據推文的品質（如幽默感、深度、回應主題的相關性）給出滿分100分的評分。\n"
+            "4. 解釋評分的標準，說明為何會給出這樣的分數。\n\n"
+            "注意：回覆中請避免使用 Markdown 語法，僅使用純文字格式。以下是需要分析的文章標題與推文："
+        )},
+
                 {"role": "user", "content": formatted_content}
             ],
             temperature=0.7,
-            max_tokens=5000
+            
         )
         
         # 獲取摘要結果
@@ -112,7 +125,7 @@ def main():
     cursor = conn.cursor()
 
     try:
-        articles = get_recent_articles(cursor, 10)
+        articles = get_recent_articles(cursor, 5)
         if not articles:
             print("未從資料庫中檢索到任何文章。")
             return
